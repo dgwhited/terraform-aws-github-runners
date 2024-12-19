@@ -29,57 +29,71 @@ resource "aws_secretsmanager_secret" "github_token" {
   name = "${var.stack_name}-GithubPAT"
 }
 
-# ECS Execution Role
-resource "aws_iam_role" "execution" {
-  name = "${var.stack_name}-Execution"
+# # ECS Execution Role
+# resource "aws_iam_role" "execution" {
+#   name = "${var.stack_name}-Execution"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "ecs-tasks.amazonaws.com"
-        }
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
-}
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Effect = "Allow"
+#         Principal = {
+#           Service = "ecs-tasks.amazonaws.com"
+#         }
+#         Action = "sts:AssumeRole"
+#       }
+#     ]
+#   })
+# }
 
-resource "aws_iam_role_policy_attachment" "execution" {
-  role       = aws_iam_role.execution.name
+resource "aws_iam_role_policy_attachment" "task" {
+  role       = aws_iam_role.task.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-resource "aws_iam_role_policy" "execution_secret" {
-  name = "AllowReadSecret"
-  role = aws_iam_role.execution.id
+# resource "aws_iam_role_policy" "execution_secret" {
+#   name = "AllowReadSecret"
+#   role = aws_iam_role.execution.id
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect   = "Allow"
-        Action   = "secretsmanager:GetSecretValue"
-        Resource = aws_secretsmanager_secret.github_token.arn
-      }
-    ]
-  })
-}
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Effect   = "Allow"
+#         Action   = "secretsmanager:GetSecretValue"
+#         Resource = aws_secretsmanager_secret.github_token.arn
+#       }
+#     ]
+#   })
+# }
 
 # Security Group
 resource "aws_security_group" "runners" {
   name        = var.stack_name
   description = var.stack_name
   vpc_id      = var.vpc_id
+}
 
-  egress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+resource "aws_security_group_rule" "app_ecs_allow_outbound" {
+  description       = "Allow all outbound"
+  security_group_id = aws_security_group.runners.id
+
+  type        = "egress"
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "allow_self" {
+  description       = "Allow all ingress between resources within this security group"
+  type              = "ingress"
+  to_port           = -1
+  from_port         = -1
+  protocol          = "all"
+  security_group_id = aws_security_group.runners.id
+  self              = true
 }
 
 # CloudWatch Log Group
@@ -147,7 +161,7 @@ resource "aws_iam_role_policy" "task" {
           "secretsmanager:DescribeSecret"
         ]
         Resource = [
-          aws_secretsmanager_secret.github_token.arn
+          "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:/${var.stack_name}-GithubPAT*",
         ]
       }
     ]
@@ -161,7 +175,7 @@ resource "aws_ecs_task_definition" "runners" {
   memory                   = var.memory
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  execution_role_arn       = aws_iam_role.execution.arn
+  execution_role_arn       = aws_iam_role.task.arn
   task_role_arn            = aws_iam_role.task.arn
 
   container_definitions = jsonencode([
