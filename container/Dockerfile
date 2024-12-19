@@ -8,7 +8,7 @@ ARG FILENAME="actions-runner-linux-arm64-${RUNNER_VERSION}.tar.gz"
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl tar jq git zip unzip 
 
 # Install AWS CLI
-RUN curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o ./awscliv2.zip \
+RUN curl https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip -o ./awscliv2.zip \
   && unzip -q ./awscliv2.zip \
   && ./aws/install
 
@@ -20,6 +20,7 @@ RUN echo "62cc5735d63057d8d07441507c3d6974e90c1854bdb33e9c8b26c0da086336e1  acti
 RUN tar xzf ./${FILENAME} && bin/installdependencies.sh
 
 COPY ./start.sh .
+RUN chmod +x ./start.sh
 
 ENV RUNNER_ALLOW_RUNASROOT=true
 

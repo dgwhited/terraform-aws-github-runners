@@ -18,6 +18,27 @@ provider "aws" {
   profile = "mattermost-security-test.AWSAdministratorAccess"
 }
 
+locals {
+  # Create two equally-sized subnet CIDR blocks from the VPC CIDR
+  subnet_cidrs = cidrsubnets(var.vpc_cidr, 2, 2, 2, 2)
+}
+
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "5.17.0"
+
+  name = var.stack_name
+  cidr = var.vpc_cidr
+
+  azs             = ["us-east-1a", "us-east-1b"]
+  private_subnets = [local.subnet_cidrs[0], local.subnet_cidrs[1]]
+  public_subnets  = [local.subnet_cidrs[2], local.subnet_cidrs[3]]
+
+  enable_nat_gateway = true
+  single_nat_gateway = true
+  one_nat_gateway_per_az = false
+}
+
 # ECR Repository
 resource "aws_ecr_repository" "runners" {
   name                 = var.ecr_repo_name
@@ -72,7 +93,7 @@ resource "aws_iam_role_policy_attachment" "task" {
 resource "aws_security_group" "runners" {
   name        = var.stack_name
   description = var.stack_name
-  vpc_id      = var.vpc_id
+  vpc_id      = module.vpc.vpc_id
 }
 
 resource "aws_security_group_rule" "app_ecs_allow_outbound" {
@@ -161,7 +182,7 @@ resource "aws_iam_role_policy" "task" {
           "secretsmanager:DescribeSecret"
         ]
         Resource = [
-          "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:/${var.stack_name}-GithubPAT*",
+          "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.stack_name}-GithubPAT*",
         ]
       }
     ]
@@ -209,6 +230,10 @@ resource "aws_ecs_task_definition" "runners" {
       }
     }
   ])
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = "ARM64"
+  }
 }
 
 # ECS Service
@@ -220,7 +245,7 @@ resource "aws_ecs_service" "runners" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = var.subnet_ids
+    subnets          = module.vpc.private_subnets
     security_groups  = [aws_security_group.runners.id]
     assign_public_ip = false
   }

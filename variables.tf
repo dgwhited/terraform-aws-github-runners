@@ -10,13 +10,13 @@ variable "num_runners" {
   description = "Set to 0 for initial deployment. Then scale once the runner image is available in the repo."
 }
 
-variable "vpc_id" {
-  type = string
-}
+# variable "vpc_id" {
+#   type = string
+# }
 
-variable "subnet_ids" {
-  type = list(string)
-}
+# variable "subnet_ids" {
+#   type = list(string)
+# }
 
 variable "github_org" {
   type        = string
@@ -26,22 +26,28 @@ variable "github_org" {
 variable "cpu" {
   type        = string
   description = "CPU allocation for runner containers. Be sure to match with memory!"
-  default = "4096"
+  default     = "4096"
 }
 
 variable "memory" {
   type        = string
   description = "Memory allocation for runner containers. Be sure to match with CPU!"
-  default = "8192"
+  default     = "8192"
 }
 
 variable "ecr_repo_name" {
   type        = string
   description = "Name for the ECR repo that will be created to hold runner custom image"
-  default = "github-runner-image"
+  default     = "github-runner-image"
 }
 
 variable "stack_name" {
   type        = string
   description = "Name of the stack/deployment"
 }
+
+variable "vpc_cidr" {
+  type        = string
+  description = "CIDR block for the VPC to split into two equal parts for subnets."
+}
+
