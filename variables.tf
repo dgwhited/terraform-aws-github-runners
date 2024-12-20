@@ -10,14 +10,6 @@ variable "num_runners" {
   description = "Set to 0 for initial deployment. Then scale once the runner image is available in the repo."
 }
 
-# variable "vpc_id" {
-#   type = string
-# }
-
-# variable "subnet_ids" {
-#   type = list(string)
-# }
-
 variable "github_org" {
   type        = string
   description = "organization"
@@ -51,3 +43,7 @@ variable "vpc_cidr" {
   description = "CIDR block for the VPC to split into two equal parts for subnets."
 }
 
+variable "environment" {
+  type        = string
+  description = "Environment tag for the runner."
+}

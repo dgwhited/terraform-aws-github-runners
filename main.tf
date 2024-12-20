@@ -5,21 +5,10 @@ terraform {
       version = "~> 5.0"
     }
   }
-  backend "s3" {
-    bucket  = "mm-security-staging-terraform-state"
-    key     = "project/github-runners"
-    region  = "us-east-1"
-    profile = "mattermost-security-test.AWSAdministratorAccess"
-  }
-
-}
-
-provider "aws" {
-  profile = "mattermost-security-test.AWSAdministratorAccess"
 }
 
 locals {
-  # Create two equally-sized subnet CIDR blocks from the VPC CIDR
+  # Create four equally-sized subnet CIDR blocks from the VPC CIDR
   subnet_cidrs = cidrsubnets(var.vpc_cidr, 2, 2, 2, 2)
 }
 
@@ -34,8 +23,8 @@ module "vpc" {
   private_subnets = [local.subnet_cidrs[0], local.subnet_cidrs[1]]
   public_subnets  = [local.subnet_cidrs[2], local.subnet_cidrs[3]]
 
-  enable_nat_gateway = true
-  single_nat_gateway = true
+  enable_nat_gateway     = true
+  single_nat_gateway     = true
   one_nat_gateway_per_az = false
 }
 
@@ -50,44 +39,11 @@ resource "aws_secretsmanager_secret" "github_token" {
   name = "${var.stack_name}-GithubPAT"
 }
 
-# # ECS Execution Role
-# resource "aws_iam_role" "execution" {
-#   name = "${var.stack_name}-Execution"
-
-#   assume_role_policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Effect = "Allow"
-#         Principal = {
-#           Service = "ecs-tasks.amazonaws.com"
-#         }
-#         Action = "sts:AssumeRole"
-#       }
-#     ]
-#   })
-# }
-
 resource "aws_iam_role_policy_attachment" "task" {
   role       = aws_iam_role.task.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# resource "aws_iam_role_policy" "execution_secret" {
-#   name = "AllowReadSecret"
-#   role = aws_iam_role.execution.id
-
-#   policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Effect   = "Allow"
-#         Action   = "secretsmanager:GetSecretValue"
-#         Resource = aws_secretsmanager_secret.github_token.arn
-#       }
-#     ]
-#   })
-# }
 
 # Security Group
 resource "aws_security_group" "runners" {
@@ -207,7 +163,7 @@ resource "aws_ecs_task_definition" "runners" {
       environment = [
         {
           name  = "ENVIRONMENT"
-          value = "cicd"
+          value = var.environment
         },
         {
           name  = "ORG"
