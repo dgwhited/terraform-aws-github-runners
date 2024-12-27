@@ -11,7 +11,7 @@ on:
     branches: ["master", "main"]
   # Schedule the CI job (this method uses cron syntax):
   schedule:
-    - cron: '20 17 * * *' # Sets Semgrep to scan every day at 17:20 UTC.
+    - cron: '19 15 * * *' # Sets Semgrep to scan every day at 17:20 UTC.
     # It is recommended to change the schedule to a random time.
 
 jobs:
@@ -23,13 +23,13 @@ jobs:
 
     container:
       # A Docker image with Semgrep installed. Do not change this.
-      image: semgrep/semgrep
+      image: semgrep/semgrep@da1124acb54b20c57ba454b49cb7ea65be7bac00 # 1.101.0
 
     # Skip any PR created by dependabot to avoid permission issues:
     if: (github.actor != 'dependabot[bot]')
 
     steps:
       # Fetch project source with GitHub Actions Checkout. Use either v3 or v4.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
       # Run the "semgrep scan" command on the command line of the docker image.
       - run: semgrep scan --config auto
