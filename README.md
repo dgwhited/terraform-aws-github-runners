@@ -29,6 +29,7 @@
 | [aws_iam_role.task](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy.task](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_iam_role_policy_attachment.task](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_role_policy_attachment.task_custom_policies](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_secretsmanager_secret.github_token](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
 | [aws_security_group.runners](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_security_group_rule.allow_self](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
@@ -40,15 +41,17 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_cpu"></a> [cpu](#input\_cpu) | CPU allocation for runner containers. Be sure to match with memory! | `string` | `"4096"` | no |
-| <a name="input_ecr_repo_name"></a> [ecr\_repo\_name](#input\_ecr\_repo\_name) | Name for the ECR repo that will be created to hold runner custom image | `string` | `"github-runner-image"` | no |
-| <a name="input_environment"></a> [environment](#input\_environment) | Environment tag for the runner. | `string` | n/a | yes |
-| <a name="input_github_org"></a> [github\_org](#input\_github\_org) | organization | `string` | n/a | yes |
-| <a name="input_image_tag"></a> [image\_tag](#input\_image\_tag) | Leave as latest for initial deployment. Then update to set the correct image tag (not URI). | `string` | `"latest"` | no |
-| <a name="input_memory"></a> [memory](#input\_memory) | Memory allocation for runner containers. Be sure to match with CPU! | `string` | `"8192"` | no |
-| <a name="input_num_runners"></a> [num\_runners](#input\_num\_runners) | Set to 0 for initial deployment. Then scale once the runner image is available in the repo. | `number` | `0` | no |
-| <a name="input_stack_name"></a> [stack\_name](#input\_stack\_name) | Name of the stack/deployment | `string` | n/a | yes |
-| <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | CIDR block for the VPC to split into two equal parts for subnets. | `string` | n/a | yes |
+| <a name="input_cpu"></a> [cpu](#input\_cpu) | CPU units for the task | `number` | `256` | no |
+| <a name="input_custom_task_policies"></a> [custom\_task\_policies](#input\_custom\_task\_policies) | List of IAM policy ARNs to attach to the task role | `list(string)` | `[]` | no |
+| <a name="input_ecr_repo_name"></a> [ecr\_repo\_name](#input\_ecr\_repo\_name) | Name of the ECR repository | `string` | n/a | yes |
+| <a name="input_environment"></a> [environment](#input\_environment) | Environment name | `string` | n/a | yes |
+| <a name="input_github_org"></a> [github\_org](#input\_github\_org) | GitHub organization name | `string` | n/a | yes |
+| <a name="input_image_tag"></a> [image\_tag](#input\_image\_tag) | Docker image tag to use | `string` | n/a | yes |
+| <a name="input_memory"></a> [memory](#input\_memory) | Memory for the task in MB | `number` | `512` | no |
+| <a name="input_num_runners"></a> [num\_runners](#input\_num\_runners) | Number of runners to maintain | `number` | `1` | no |
+| <a name="input_stack_name"></a> [stack\_name](#input\_stack\_name) | Name of the stack | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to resources | `map(string)` | `{}` | no |
+| <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | CIDR block for VPC | `string` | `"10.0.0.0/16"` | no |
 
 ## Outputs
 
