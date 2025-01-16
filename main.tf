@@ -44,6 +44,13 @@ resource "aws_iam_role_policy_attachment" "task" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+resource "aws_iam_role_policy_attachment" "task_custom_policies" {
+  count = length(var.custom_task_policies)
+
+  role       = aws_iam_role.task.name
+  policy_arn = var.custom_task_policies[count.index]
+}
+
 
 # Security Group
 resource "aws_security_group" "runners" {
